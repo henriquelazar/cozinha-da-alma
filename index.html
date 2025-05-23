@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cozinha da Alma - Venda de Receitas</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #faf4f0; color: #333; }
+  header { text-align: center; margin-bottom: 30px; }
+  h1 { color: #6b4c3b; }
+  .recipe { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: white; }
+  button { background: #6b4c3b; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #8b6a53; }
+  #comments { margin-top: 30px; }
+  #comments h2 { margin-bottom: 10px; }
+  .comment { background: #f2ebe6; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+  #paymentSection { display: none; border: 1px solid #6b4c3b; padding: 20px; border-radius: 8px; margin-top: 20px; background: #fff9f4;}
+  label, input, textarea { display: block; margin-bottom: 10px; width: 100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cozinha da Alma</h1>
+  <p>Receitas que tocam a alma, à venda aqui.</p>
+</header>
+
+<section id="catalog">
+  <article class="recipe" data-id="1" data-price="30" data-title="Outono Dentro de Mim">
+    <h2>Outono Dentro de Mim</h2>
+    <p>Prato principal poético e nostálgico inspirado na primeira paixão não correspondida.</p>
+    <button onclick="buyRecipe(1)">Comprar - R$30,00</button>
+  </article>
+  <article class="recipe" data-id="2" data-price="25" data-title="O Prato que Sonha Enquanto Flutua">
+    <h2>O Prato que Sonha Enquanto Flutua</h2>
+    <p>Entrada etérea inspirada nas viagens astrais e universos paralelos.</p>
+    <button onclick="buyRecipe(2)">Comprar - R$25,00</button>
+  </article>
+</section>
+
+<section id="paymentSection">
+  <h2>Pagamento via PIX</h2>
+  <p>Receita: <span id="selectedRecipeTitle"></span></p>
+  <p>Valor: R$ <span id="selectedRecipePrice"></span></p>
+  <p>Use o QR Code abaixo para realizar o pagamento via PIX:</p>
+  <img id="pixQR" src="" alt="QR Code PIX" style="width:200px;"/>
+  <p>Após o pagamento, envie seu nome e avaliação:</p>
+  <form id="commentForm" onsubmit="submitComment(event)">
+    <label for="name">Seu nome:</label>
+    <input type="text" id="name" required />
+    <label for="comment">Sua avaliação:</label>
+    <textarea id="comment" rows="3" required></textarea>
+    <button type="submit">Enviar Avaliação</button>
+  </form>
+</section>
+
+<section id="comments">
+  <h2>Avaliações dos clientes</h2>
+  <div id="commentsList">
+    <!-- Comentários aparecerão aqui -->
+  </div>
+</section>
+
+<script>
+  const pixKey = '123e4567-e89b-12d3-a456-426614174000'; // Coloque sua chave PIX real aqui
+  let selectedRecipe = null;
+  const commentsDB = {};
+
+  function buyRecipe(id) {
+    selectedRecipe = document.querySelector(`.recipe[data-id="${id}"]`);
+    const title = selectedRecipe.getAttribute('data-title');
+    const price = selectedRecipe.getAttribute('data-price');
+    document.getElementById('selectedRecipeTitle').textContent = title;
+    document.getElementById('selectedRecipePrice').textContent = price;
+
+    // Gerar QR Code PIX simples (estático)
+    // Para QR code real, integre API de gerador PIX, aqui é simulado com texto estático:
+    // Você pode usar https://www.pix.qrcode.tec.br para gerar QR Codes reais.
+    const pixPayload = `00020126580014BR.GOV.BCB.PIX0136${pixKey}0208${price.replace('.', '')}520400005303986540${price}5802BR5925Cozinha da Alma6009São Paulo6108054090006304B60F`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixPayload)}`;
+
+    document.getElementById('pixQR').src = qrUrl;
+
+    document.getElementById('paymentSection').style.display = 'block';
+  }
+
+  function submitComment(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const comment = document.getElementById('comment').value.trim();
+
+    if(!selectedRecipe) {
+      alert('Selecione uma receita para avaliar.');
+      return;
+    }
+
+    const recipeId = selectedRecipe.getAttribute('data-id');
+    if(!commentsDB[recipeId]) commentsDB[recipeId] = [];
+    commentsDB[recipeId].push({name, comment});
+    renderComments();
+
+    // Limpar formulário
+    e.target.reset();
+    alert('Obrigado pela avaliação!');
+
+    // Esconder pagamento (opcional)
+    document.getElementById('paymentSection').style.display = 'none';
+  }
+
+  function renderComments() {
+    const container = document.getElementById('commentsList');
+    container.innerHTML = '';
+
+    for(let recipeId in commentsDB) {
+      commentsDB[recipeId].forEach(c => {
+        const div = document.createElement('div');
+        div.classList.add('comment');
+        div.innerHTML = `<strong>${c.name}</strong><p>${c.comment}</p>`;
+        container.appendChild(div);
+      });
+    }
+  }
+</script>
+
+</body>
+</html>
